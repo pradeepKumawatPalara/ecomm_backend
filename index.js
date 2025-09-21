@@ -71,6 +71,7 @@ server.post(
 const opts = {};
 opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = process.env.JWT_SECRET_KEY; 
+const allowedOrigins = [process.env.FRONTEND_URL];
 
 //middlewares
 
@@ -84,11 +85,27 @@ server.use(
   })
 );
 server.use(passport.authenticate('session'));
+
 server.use(
   cors({
-    exposedHeaders: ['X-Total-Count'],
+    origin: function (origin, callback) {
+      // If running locally, allow all origins
+      if (process.env.ENVIRONMENT === "development") {
+        return callback(null, true); // Allow everything
+      }
+
+      // If running on Render, allow only configured frontend
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    exposedHeaders: ["X-Total-Count"],
   })
 );
+
 server.use(express.json()); // to parse req.body
 
 server.use('/products', isAuth(), productsRouter.router);

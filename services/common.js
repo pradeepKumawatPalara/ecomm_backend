@@ -12,9 +12,22 @@ let transporter = nodemailer.createTransport({
 });
 
 
-exports.isAuth = (req, res, done) => {
-  return passport.authenticate('jwt');
+
+exports.isAuth = () => {
+  return (req, res, next) => {
+    passport.authenticate("jwt", { session: false }, (err, user, info) => {
+      if (err) return next(err);
+
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      req.user = user; // attach user to request object
+      next();
+    })(req, res, next);
+  };
 };
+
 
 exports.sanitizeUser = (user) => {
   return { id: user.id, role: user.role };
