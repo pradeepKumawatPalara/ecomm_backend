@@ -71,7 +71,7 @@ server.post(
 const opts = {};
 opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = process.env.JWT_SECRET_KEY; 
-const allowedOrigins = [process.env.FRONTEND_URL];
+
 
 //middlewares
 
@@ -85,23 +85,32 @@ server.use(
   })
 );
 server.use(passport.authenticate('session'));
+const allowedOrigins = [
+  "http://localhost:3000",                     // Local development
+  process.env.FRONTEND_URL,                    // Your deployed frontend (Render / Vercel)
+  "https://https://ecomm-frontend-48c6.vercel.app/.com",                  // Optional: your custom domain
+];
 
+// Enhanced CORS setup
 server.use(
   cors({
     origin: function (origin, callback) {
-      // If running locally, allow all origins
-      if (process.env.ENVIRONMENT === "development") {
-        return callback(null, true); // Allow everything
+      // Always allow requests from tools like Postman or curl (no origin)
+      if (!origin) return callback(null, true);
+
+      // Allow local dev OR whitelisted production origins
+      if (
+        process.env.ENVIRONMENT === "development" ||
+        allowedOrigins.includes(origin)
+      ) {
+        return callback(null, true);
       }
 
-      // If running on Render, allow only configured frontend
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
+      // Reject everything else
+      console.warn(`❌ CORS blocked: ${origin}`);
+      return callback(new Error("Not allowed by CORS"));
     },
-    credentials: true,
+    credentials: true, // Allow cookies / Authorization headers
     exposedHeaders: ["X-Total-Count"],
   })
 );
