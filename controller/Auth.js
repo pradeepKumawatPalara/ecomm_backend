@@ -62,11 +62,12 @@ exports.logout = async (req, res) => {
 };
 
 exports.checkAuth = async (req, res) => {
-  if (req.user) {
-    res.json(req.user);
-  } else {
-    res.sendStatus(401);
-  }
+  // if (req.user) {
+  //   res.json(req.user);
+  // } else {
+  //   res.sendStatus(401);
+  // }
+      res.json(req.user);
 };
 
 exports.resetPasswordRequest = async (req, res) => {
